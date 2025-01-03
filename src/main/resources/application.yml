@@ -1,1 +1,3 @@
-spring.application.name=QuickBeat-v2
+spring:
+  profiles:
+    active: dev

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quick Beat Shuffle</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" type="text/css" href="../css/shuffle.css">
+  <link rel="stylesheet" type="text/css" href="../css/main.css">
+</head>
+<body>
+<div id="navbar-container"></div>
+<script src="../js/navbar.js"></script>
+
+<div class="shuffle-text">
+  <h1>Quick Beat</h1>
+  <h2>Choose the Genre and Keyword to play!</h2>
+  <p class="hero-description">장르와 키워드를 선택해주세요</p>
+</div>
+
+<div class="content-tile" id="search-section">
+  <form class="search-form">
+    <input type="hidden" id="hidden_token">
+    <div class="form-grid">
+      <div class="form-group">
+        <select id="select_genre" class="form-select" required>
+          <option value="">Genre</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <select id="select_playlist" class="form-select" required>
+          <option value="">Keyword</option>
+        </select>
+      </div>
+
+      <button type="submit" id="btn_submit" class="submit-button">
+        <span>Search</span>
+        <i class="fas fa-arrow-right"></i>
+      </button>
+      <div id="error-message" class="error-message" style="display: none;"></div>
+    </div>
+  </form>
+</div>
+
+<div class="coming-soon-section" id="coming-soon-section" style="display: none;">
+  <div class="coming-soon-content">
+    <h2>Coming Soon!</h2>
+    <p>Your favorite playlists are about to be updated very soon.</p>
+    <p>Please choose the genre again!</p>
+    <button id="go-back-button" class="go-back-button">
+      <i class="fas fa-arrow-left"></i>
+      <span>Go Back and Choose Again!</span>
+    </button>
+  </div>
+</div>
+
+<div class="results-container">
+  <div class="song-list"></div>
+  <div id="song-detail"></div>
+</div>
+
+<div id="footer-container"></div>
+<script src="../js/footer.js"></script>
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+<script src="../js/shuffle.js"></script>
+</body>
+</html>
