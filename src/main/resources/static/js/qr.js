@@ -49,5 +49,5 @@ function showAnswerSheet(answerId) {
 }
 
 function goToQuiz() {
-    window.location.href = 'quiz.html';
+    window.location.href = '/quiz';
 }

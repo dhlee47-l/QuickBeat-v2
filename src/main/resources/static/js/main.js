@@ -27,16 +27,14 @@ const MainController = (function() {
         event.preventDefault();
 
         const clientId = '724a3cf2d2e44418acea58d9eea869af';
-        const redirectUri = 'http://localhost:8080/shuffle'; // Changed to redirect to shuffle page
+        const redirectUri = 'http://localhost:8080/shuffle';
 
         // Generate PKCE values
         const codeVerifier = generateCodeVerifier();
         const codeChallenge = await generateCodeChallenge(codeVerifier);
 
-        // Store verifier for later use
         localStorage.setItem('code_verifier', codeVerifier);
 
-        // Create authorization URL
         const args = new URLSearchParams({
             client_id: clientId,
             response_type: 'code',
@@ -46,11 +44,9 @@ const MainController = (function() {
             scope: 'user-read-private user-read-email playlist-read-private user-modify-playback-state'
         });
 
-        // Redirect to Spotify authorization
         window.location = 'https://accounts.spotify.com/authorize?' + args;
     };
 
-    // Initialize event listeners
     const init = () => {
         const playButton = document.querySelector('.btn-main');
         playButton.addEventListener('click', handlePlayGame);

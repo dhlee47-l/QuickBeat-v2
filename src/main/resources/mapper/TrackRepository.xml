@@ -1,8 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper
-        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.lec.spring.repository.TrackRepository">
+    <insert id="save" parameterType="com.lec.spring.domain.Track">
+        INSERT INTO track (id, track_id, name, artist, album_image, uri, answer_id)
+        VALUES (#{id}, #{trackId}, #{name}, #{artist}, #{albumImage}, #{uri}, #{answerId})
+    </insert>
 
+    <insert id="saveAll" parameterType="java.util.List">
+        INSERT INTO track (id, track_id, name, artist, album_image, uri, answer_id)
+        VALUES
+        <foreach collection="list" item="track" separator=",">
+            (#{track.id}, #{track.trackId}, #{track.name}, #{track.artist},
+            #{track.albumImage}, #{track.uri}, #{track.answerId})
+        </foreach>
+    </insert>
+
+    <select id="findByAnswerId" resultType="com.lec.spring.domain.Track">
+        SELECT * FROM track WHERE answer_id = #{value}
+    </select>
+
+    <select id="findById" resultType="com.lec.spring.domain.Track">
+        SELECT * FROM track WHERE id = #{value}
+    </select>
+
+    <select id="findAll" resultType="com.lec.spring.domain.Track">
+        SELECT * FROM track
+    </select>
+
+    <delete id="deleteByAnswerId">
+        DELETE FROM track WHERE answer_id = #{value}
+    </delete>
 </mapper>

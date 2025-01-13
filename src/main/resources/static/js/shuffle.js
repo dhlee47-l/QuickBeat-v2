@@ -143,7 +143,6 @@ const APIController = (function () {
     }
 })();
 
-
 const FormValidator = (function () {
     // Validation rules
     const rules = {
@@ -334,7 +333,6 @@ const UIController = (function () {
     };
 })();
 
-
 const APPController = (function (UICtrl, APICtrl, FormValidator) {
     const DOMInputs = UICtrl.inputField();
     const DOMElements = UICtrl.getDOMElements();
@@ -447,12 +445,27 @@ const APPController = (function (UICtrl, APICtrl, FormValidator) {
 
 
 
-            localStorage.setItem('trackData', JSON.stringify(trackData));
-            console.log(trackData)
-            window.location.href = 'qr.html';
+            // Instead of localStorage, send to Spring Boot API
+            const response = await fetch('/api/tracks', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(trackData)
+
+            });
+
+
+            if (!response.ok) {
+                throw new Error('Failed to save tracks');
+            }
+
+            const qrCodeId = await response.text();
+            window.location.href = `/qr?id=${qrCodeId}`;
+
         } catch (error) {
-            console.error('Error fetching tracks:', error);
-            UICtrl.showError('Error loading tracks. Please try again.');
+            console.error('Error:', error);
+            UICtrl.showError('Error saving tracks. Please try again.');
         }
     });
 

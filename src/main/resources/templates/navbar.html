@@ -1,21 +1,28 @@
-<link rel="stylesheet" type="text/css" href="/css/main.css">
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <link rel="stylesheet" type="text/css" th:href="@{/css/main.css}">
+</head>
 <nav class="navbar">
   <div class="nav-content">
     <div class="nav-logo">
-      <a href="index.html">
+      <a th:href="@{/index}">
         <i class="fa-brands fa-spotify"></i>
         <i class="fa-solid fa-gamepad"></i>
         Quick Beat
       </a>
     </div>
     <div class="nav-links">
-      <a href="index.html">Home</a>
+      <a th:href="@{/index}">Home</a>
       <a href="https://developer.spotify.com/documentation/web-api">Documentation</a>
       <a href="https://open.spotify.com/">Songs</a>
-      <a href="shuffle.html">Game</a>
+      <a th:href="@{/shuffle}">Game</a>
     </div>
     <div class="nav-auth">
-      <a href="shuffle.html" class="btn btn-primary">Try Free</a>
+      <a th:href="@{/shuffle}" class="btn btn-primary">Try Free</a>
     </div>
   </div>
 </nav>
