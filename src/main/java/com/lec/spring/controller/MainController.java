@@ -21,4 +21,9 @@ public class MainController {
     public String qr() {
         return "qr";
     }
+
+    @GetMapping("/quiz")
+    public String quiz() {
+        return "quiz";
+    }
 }
