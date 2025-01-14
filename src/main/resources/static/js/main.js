@@ -1,4 +1,12 @@
 const MainController = (function() {
+    const CONFIG = {
+        clientId: '724a3cf2d2e44418acea58d9eea869af',
+        redirectUri: 'http://localhost:8080/shuffle',
+        authUrl: 'https://accounts.spotify.com/authorize',
+        tokenUrl: 'https://accounts.spotify.com/api/token',
+        scope: 'user-read-private user-read-email playlist-read-private user-modify-playback-state'
+    };
+
     const generateCodeVerifier = (length = 128) => {
         const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
         const values = crypto.getRandomValues(new Uint8Array(length));
@@ -26,25 +34,79 @@ const MainController = (function() {
     const handlePlayGame = async (event) => {
         event.preventDefault();
 
-        const clientId = '724a3cf2d2e44418acea58d9eea869af';
-        const redirectUri = 'http://localhost:8080/shuffle';
-
-        // Generate PKCE values
         const codeVerifier = generateCodeVerifier();
         const codeChallenge = await generateCodeChallenge(codeVerifier);
 
         localStorage.setItem('code_verifier', codeVerifier);
 
         const args = new URLSearchParams({
-            client_id: clientId,
+            client_id: CONFIG.clientId,
             response_type: 'code',
-            redirect_uri: redirectUri,
+            redirect_uri: CONFIG.redirectUri,
             code_challenge_method: 'S256',
             code_challenge: codeChallenge,
-            scope: 'user-read-private user-read-email playlist-read-private user-modify-playback-state'
+            scope: CONFIG.scope
         });
 
-        window.location = 'https://accounts.spotify.com/authorize?' + args;
+        const authUrl = new URL(CONFIG.authUrl);
+        authUrl.search = args.toString();
+        window.location.href = authUrl.toString();
+    };
+
+    const getToken = async code => {
+        const codeVerifier = localStorage.getItem('code_verifier');
+
+        const payload = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                client_id: CONFIG.clientId,
+                grant_type: 'authorization_code',
+                code,
+                redirect_uri: CONFIG.redirectUri,
+                code_verifier: codeVerifier,
+            }),
+        };
+
+        const response = await fetch(CONFIG.tokenUrl, payload);
+        const data = await response.json();
+        console.log("데이터"+data)
+
+        localStorage.setItem('access_token', data.access_token);
+
+        if (data.refresh_token) {
+            localStorage.setItem('refresh_token', data.refresh_token);
+        }
+
+        return data;
+    };
+
+    const getRefreshToken = async () => {
+        const refreshToken = localStorage.getItem('refresh_token');
+
+        const payload = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({
+                grant_type: 'refresh_token',
+                refresh_token: refreshToken,
+                client_id: CONFIG.clientId
+            }),
+        };
+
+        const response = await fetch(CONFIG.tokenUrl, payload);
+        const data = await response.json();
+
+        localStorage.setItem('access_token', data.access_token);
+        if (data.refresh_token) {
+            localStorage.setItem('refresh_token', data.refresh_token);
+        }
+
+        return data;
     };
 
     const init = () => {
@@ -53,7 +115,9 @@ const MainController = (function() {
     };
 
     return {
-        init
+        init,
+        getToken,
+        getRefreshToken
     };
 })();
 

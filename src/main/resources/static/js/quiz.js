@@ -1,8 +1,4 @@
-const trackData = JSON.parse(localStorage.getItem('trackData'));
-const $trackListDiv = $('#track-list');
-let answeredQuestions = new Set();
-let totalQuestions = trackData ? trackData.length : 0;
-
+// 기존 모달 HTML 유지
 const modalHTML = `
     <div class="modal-overlay" id="track-modal">
         <div class="modal-content">
@@ -16,7 +12,7 @@ const modalHTML = `
                             <div class="question-mark-overlay">
                                 <i class="fa-solid fa-question"></i>
                             </div>
-                        <img id="modal-img" src="" alt="">
+                            <img id="modal-img" src="" alt="">
                         </div>
                     </div>
                     <div class="modal-track-info">
@@ -49,12 +45,46 @@ const scoreModalHTML = `
     </div>
 `;
 
+let trackData = null;
+let currentTrackIndex = null;
+const $trackListDiv = $('#track-list');
+let answeredQuestions = new Set();
+let totalQuestions = 0;
+let isPlaying = false;
+
+// Initialize
 $('body').append(modalHTML);
 $('body').append(scoreModalHTML);
 
+// Load tracks from Spring Boot API
+async function loadTracks() {
+    try {
+        // const urlParams = new URLSearchParams(window.location.search);
+        // const answerId = urlParams.get('id');
+        const answerId = window.location.pathname.split('/').pop();
+
+        if (!answerId) {
+            console.error('No answer ID provided');
+            return;
+        }
+
+        const response = await fetch(`/api/tracks/${answerId}`);
+        if (!response.ok) throw new Error('Failed to fetch tracks');
+
+        trackData = await response.json();
+        totalQuestions = trackData.length;
+
+        if (trackData && trackData.length > 0) {
+            $trackListDiv.html(trackData.map((track, index) => createTrackElement(track, index)).join(''));
+        } else {
+            $trackListDiv.html('<p style="grid-column: 1/-1; text-align: center; padding: 32px; color: #666;">Coming Soon!</p>');
+        }
+    } catch (error) {
+        console.error('Error loading tracks:', error);
+    }
+}
+
 function createTrackElement(track, index) {
-
-
     return `
         <div class="track-item" onclick="openModal(${index})">
             <div class="track-cover" id="track-cover-${index}">
@@ -67,14 +97,55 @@ function createTrackElement(track, index) {
                 <div class="track-name">${track.name}</div>
                 <div class="track-artist">${track.artist}</div>
             </div>
-<!--            previewUrl이 아닌 player-->
-            <audio id="audio-${index}" class="audio-player" src="${track.previewUrl}"></audio>
         </div>
     `;
 }
 
-let currentAudio = null;
-let currentTrackIndex = null;
+// Spotify Playback Control Functions
+async function playTrack(uri) {
+    try {
+        await fetch('https://api.spotify.com/v1/me/player/play', {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                uris: [uri]
+            })
+        });
+    } catch (error) {
+        console.error('Error playing track:', error);
+    }
+}
+
+async function pausePlayback() {
+    try {
+        await fetch('https://api.spotify.com/v1/me/player/pause', {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            }
+        });
+    } catch (error) {
+        console.error('Error pausing playback:', error);
+    }
+}
+
+function togglePlay() {
+    const track = trackData[currentTrackIndex];
+    const $playButton = $('#modal-play-button');
+
+    if (!isPlaying) {
+        playTrack(track.uri);
+        $playButton.html('<i class="fa-solid fa-pause"></i>');
+    } else {
+        pausePlayback();
+        $playButton.html('<i class="fa-solid fa-play"></i>');
+    }
+
+    isPlaying = !isPlaying;
+}
 
 function openModal(index) {
     const track = trackData[index];
@@ -88,15 +159,20 @@ function openModal(index) {
     $('.question-mark-overlay').removeClass('hidden');
     $('.modal-track-info').removeClass('visible');
 
-    $('#modal-play-button').html('<i class="fa-solid fa-play"></i>').off('click').on('click', () => togglePlay(`audio-${index}`));
+    $('#modal-play-button')
+        .html('<i class="fa-solid fa-play"></i>')
+        .off('click')
+        .on('click', togglePlay);
+
     $('#modal-o-button').off('click').on('click', () => handleO(index));
     $('#modal-x-button').off('click').on('click', () => handleX(index));
 }
 
 function closeModal() {
     $('#track-modal').removeClass('active');
-    if (currentAudio && !currentAudio.paused) {
-        currentAudio.pause();
+    if (isPlaying) {
+        pausePlayback();
+        isPlaying = false;
     }
 }
 
@@ -126,24 +202,6 @@ function handleX(index) {
     closeModal();
 }
 
-function togglePlay(audioId) {
-    const $audio = $(`#${audioId}`)[0];
-    const $playButton = $('#modal-play-button');
-
-    if (currentAudio && currentAudio !== $audio && !currentAudio.paused) {
-        currentAudio.pause();
-    }
-
-    if ($audio.paused) {
-        $audio.play();
-        $playButton.html('<i class="fa-solid fa-pause"></i>');
-        currentAudio = $audio;
-    } else {
-        $audio.pause();
-        $playButton.html('<i class="fa-solid fa-play"></i>');
-    }
-}
-
 function startConfetti() {
     confetti({
         particleCount: 100,
@@ -170,6 +228,7 @@ function closeScoreModal() {
     $('#score-modal').removeClass('active');
 }
 
+// Event Listeners
 $('.check-score-button').on('click', showScore);
 
 $('#score-modal').on('click', function(e) {
@@ -184,8 +243,7 @@ $('#track-modal').on('click', function(e) {
     }
 });
 
-if (trackData && trackData.length > 0) {
-    $trackListDiv.html(trackData.map((track, index) => createTrackElement(track, index)).join(''));
-} else {
-    $trackListDiv.html('<p style="grid-column: 1/-1; text-align: center; padding: 32px; color: #666;">Coming Soon!</p>');
-}
+// Initialize on page load
+$(document).ready(() => {
+    loadTracks();
+});

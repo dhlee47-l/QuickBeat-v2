@@ -18,7 +18,7 @@
         그렇지 않은 경우, Next 버튼을 눌러주세요.
     </div>
     <div id="qrcode" class="qr-code"></div>
-    <button class="skip-button" onclick="goToQuiz()">Next</button>
+    <button class="skip-button" onclick="goToQuiz()" th:data-answer-id="${answerId}">Next</button>
 </div>
 
 <!--<div id="answer-sheet" class="answer-sheet">-->

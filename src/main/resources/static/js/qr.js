@@ -96,11 +96,19 @@ function showError(message) {
 }
 
 function goToQuiz() {
-    window.location.href = '/quiz';
+    const button = document.querySelector('.skip-button');
+    const answerId = button.getAttribute('data-answer-id');
+    if (answerId) {
+        window.location.href = `/quiz/${answerId}`;
+    } else {
+        console.error('No answer ID found');
+        window.location.href = '/quiz';  // fallback
+    }
 }
 
-// URL 파라미터에서 특정 값을 가져오는 헬퍼 함수
-function getUrlParameter(name) {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get(name);
-}
+// // URL 파라미터에서 특정 값을 가져오는 헬퍼 함수
+// function getUrlParameter(name) {
+//     const urlParams = new URLSearchParams(window.location.search);
+//     return urlParams.get(name);
+//
+// }
