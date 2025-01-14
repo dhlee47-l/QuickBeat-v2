@@ -54,17 +54,14 @@ public class TrackServiceImpl implements TrackService {
 
     @Override
     public List<Track> getTracksByAnswerId(String answerId) {
-        System.out.println("Searching for answerId: " + answerId);
 
         Answer answer = answerRepository.findByAnswerId(answerId);
-        System.out.println("Found answer: " + answer);
 
         if (answer == null) {
             return null;
         }
 
         List<Track> tracks = trackRepository.findByAnswerNo(answer.getAnswerNo());
-        System.out.println("Found tracks: " + tracks);
 
         return tracks;
     }
