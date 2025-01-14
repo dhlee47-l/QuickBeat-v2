@@ -5,7 +5,6 @@ let answeredQuestions = new Set();
 let totalQuestions = 0;
 let isPlaying = false;
 
-// Modal HTML
 const modalHTML = `
     <div class="modal-overlay" id="track-modal">
         <div class="modal-content">
@@ -52,7 +51,7 @@ const scoreModalHTML = `
     </div>
 `;
 
-// Initialize modals
+
 $('body').append(modalHTML);
 $('body').append(scoreModalHTML);
 
@@ -82,7 +81,6 @@ async function loadTracks() {
     }
 }
 
-// Create track element HTML
 function createTrackElement(track, index) {
     return `
         <div class="track-item" onclick="openModal(${index})">
@@ -126,7 +124,6 @@ async function activateDevice(deviceId, token) {
     }
 }
 
-// Spotify playback functions
 async function playTrack(uri) {
     try {
         const token = localStorage.getItem('access_token');
@@ -154,7 +151,6 @@ async function playTrack(uri) {
             return;
         }
 
-        // Find the first available device and activate it
         const device = devices.devices[0];
         if (!device.is_active) {
             const activated = await activateDevice(device.id, token);
@@ -240,7 +236,6 @@ async function togglePlay() {
     }
 }
 
-// Modal functions
 function openModal(index) {
     const track = trackData[index];
     currentTrackIndex = index;
@@ -250,8 +245,15 @@ function openModal(index) {
     $('#modal-artist').text(track.artist);
 
     $('#track-modal').addClass('active');
-    $('.question-mark-overlay').removeClass('hidden');
-    $('.modal-track-info').removeClass('visible');
+
+    if (answeredQuestions.has(index)) {
+        $('.question-mark-overlay').addClass('hidden');
+        $('.modal-track-info').addClass('visible');
+    } else {
+        $('.question-mark-overlay').removeClass('hidden');
+        $('.modal-track-info').removeClass('visible');
+    }
+
 
     updatePlayButtonState(false);
     isPlaying = false;
@@ -268,20 +270,17 @@ function closeModal() {
     }
 }
 
-// Quiz handling functions
 function handleO(index) {
+    // Add to answered questions set only for O responses
+    answeredQuestions.add(index);
+
+    // Hide question mark overlay and show track info
     $('.question-mark-overlay').addClass('hidden');
     $('.modal-track-info').addClass('visible');
 
+    // Hide the cover on the track list
     const $trackCover = $(`#track-cover-${index}`);
-    if ($trackCover.is(':visible')) {
-        answeredQuestions.add(index);
-    }
     $trackCover.hide();
-
-    setTimeout(() => {
-        closeModal();
-    }, 100);
 }
 
 function handleX(index) {
@@ -298,7 +297,6 @@ function handleX(index) {
     closeModal();
 }
 
-// Score handling functions
 function startConfetti() {
     confetti({
         particleCount: 100,
@@ -340,7 +338,7 @@ $('#track-modal').on('click', function(e) {
     }
 });
 
-// Initialize
+
 $(document).ready(async () => {
     const token = localStorage.getItem('access_token');
     if (!token) {
@@ -348,7 +346,6 @@ $(document).ready(async () => {
         return;
     }
 
-    // Verify token is valid
     try {
         const response = await fetch('https://api.spotify.com/v1/me', {
             headers: {
