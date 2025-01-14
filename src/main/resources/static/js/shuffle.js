@@ -435,7 +435,6 @@ const APPController = (function (UICtrl, APICtrl, FormValidator) {
                     segment.match(/^[0-9A-Za-z]{22}$/));
 
                 return {
-                    id: e.track.href,
                     trackId: trackId,
                     name: e.track.name,
                     artist: e.track.artists[0].name,
@@ -445,9 +444,7 @@ const APPController = (function (UICtrl, APICtrl, FormValidator) {
             });
 
 
-
-
-            // Instead of localStorage, send to Spring Boot API
+            // send to Spring Boot API
             const response = await fetch('/api/tracks', {
                 method: 'POST',
                 headers: {
@@ -460,10 +457,14 @@ const APPController = (function (UICtrl, APICtrl, FormValidator) {
 
             if (!response.ok) {
                 throw new Error('Failed to save tracks');
+                console.error('Server error:', errorData);
+                throw new Error(`Failed to save tracks: ${response.status}`);
             }
 
             const qrCodeId = await response.text();
             window.location.href = `/qr?id=${qrCodeId}`;
+            // const answerId = await response.text();
+            // window.location.href = `/qr?id=${answerId}`;
 
         } catch (error) {
             console.error('Error:', error);

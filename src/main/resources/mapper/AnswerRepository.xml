@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lec.spring.repository.AnswerRepository">
+    <insert id="save" useGeneratedKeys="true" keyProperty="answerNo">
+        INSERT INTO answer (answer_id)
+        VALUES (#{answerId})
+    </insert>
+
+    <select id="findByAnswerId" resultType="com.lec.spring.domain.Answer">
+        SELECT answer_no as answerNo,
+               answer_id as answerId,
+               created_at as createdAt
+        FROM answer
+        WHERE answer_id = #{answerId}
+    </select>
+
+    <select id="findByAnswerNo" resultType="com.lec.spring.domain.Answer">
+        SELECT *
+        FROM answer
+        WHERE answer_no = #{value}
+    </select>
+
+    <select id="findAll" resultType="com.lec.spring.domain.Answer">
+        SELECT *
+        FROM answer
+    </select>
+
+    <delete id="deleteByAnswerId">
+        DELETE
+        FROM answer
+        WHERE answer_id = #{answerId}
+    </delete>
+
+    <delete id="deleteByAnswerNo">
+        DELETE
+        FROM answer
+        WHERE answer_no = #{value}
+    </delete>
+</mapper>
+
