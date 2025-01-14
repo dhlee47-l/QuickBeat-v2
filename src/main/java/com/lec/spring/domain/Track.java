@@ -8,11 +8,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Track {
-    private String id;
+    private Integer trackNo;
     private String trackId;
     private String name;
     private String artist;
     private String albumImage;
     private String uri;
-    private String answerId;
 }

@@ -1,44 +1,77 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.lec.spring.repository.TrackRepository">
-
     <resultMap id="trackResultMap" type="com.lec.spring.domain.Track">
-        <id property="id" column="id"/>
+        <id property="trackNo" column="track_no"/>
         <result property="trackId" column="track_id"/>
         <result property="name" column="name"/>
         <result property="artist" column="artist"/>
         <result property="albumImage" column="album_image"/>
         <result property="uri" column="uri"/>
-        <result property="answerId" column="answer_id"/>
     </resultMap>
 
-    <insert id="save" parameterType="com.lec.spring.domain.Track">
-        INSERT INTO track (id, track_id, name, artist, album_image, uri, answer_id)
-        VALUES (#{id}, #{trackId}, #{name}, #{artist}, #{albumImage}, #{uri}, #{answerId})
+    <insert id="save" useGeneratedKeys="true" keyProperty="trackNo">
+        INSERT INTO track (track_id, name, artist, album_image, uri)
+        VALUES (#{trackId}, #{name}, #{artist}, #{albumImage}, #{uri})
+            ON DUPLICATE KEY UPDATE
+                                 name = #{name},
+                                 artist = #{artist},
+                                 album_image = #{albumImage},
+                                 uri = #{uri}
     </insert>
 
-    <insert id="saveAll" parameterType="java.util.List">
-        INSERT INTO track (id, track_id, name, artist, album_image, uri, answer_id)
+    <insert id="saveAll">
+        INSERT INTO track (track_id, name, artist, album_image, uri)
         VALUES
         <foreach collection="list" item="track" separator=",">
-            (#{track.id}, #{track.trackId}, #{track.name}, #{track.artist},
-            #{track.albumImage}, #{track.uri}, #{track.answerId})
+            (#{track.trackId}, #{track.name}, #{track.artist},
+            #{track.albumImage}, #{track.uri})
         </foreach>
+        ON DUPLICATE KEY UPDATE
+        name = VALUES(name),
+        artist = VALUES(artist),
+        album_image = VALUES(album_image),
+        uri = VALUES(uri)
     </insert>
 
-    <select id="findByAnswerId" resultMap="trackResultMap">
-        SELECT * FROM track WHERE answer_id = #{value}
+    <select id="findByAnswerNo" resultMap="trackResultMap">
+        SELECT t.*
+        FROM track t
+                 JOIN answer_track at
+        ON t.track_no = at.track_no
+        WHERE at.answer_no = #{value}
     </select>
 
-    <select id="findById" resultMap="trackResultMap">
-        SELECT * FROM track WHERE id = #{value}
+    <select id="findByTrackId" resultMap="trackResultMap">
+        SELECT *
+        FROM track
+        WHERE track_id = #{value}
+    </select>
+
+    <select id="findByTrackNo" resultMap="trackResultMap">
+        SELECT *
+        FROM track
+        WHERE track_no = #{value}
     </select>
 
     <select id="findAll" resultMap="trackResultMap">
-        SELECT * FROM track
+        SELECT *
+        FROM track
     </select>
 
-    <delete id="deleteByAnswerId">
-        DELETE FROM track WHERE answer_id = #{value}
+    <select id="findTrackNoByTrackId" resultType="integer">
+        SELECT track_no FROM track WHERE track_id = #{trackId}
+    </select>
+
+    <delete id="deleteByAnswerNo">
+        DELETE
+        at FROM answer_track at
+        WHERE at.answer_no =
+        #{value}
     </delete>
+
+    <insert id="addAnswer">
+        INSERT INTO answer_track (answer_no, track_no)
+        VALUES (#{param1}, #{param2})
+    </insert>
 </mapper>

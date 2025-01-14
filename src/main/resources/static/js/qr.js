@@ -102,7 +102,7 @@ function goToQuiz() {
         window.location.href = `/quiz/${answerId}`;
     } else {
         console.error('No answer ID found');
-        window.location.href = '/quiz';  // fallback
+        window.location.href = '/quiz';
     }
 }
 

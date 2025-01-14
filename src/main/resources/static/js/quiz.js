@@ -60,6 +60,7 @@ async function loadTracks() {
     try {
         const answerId = window.location.pathname.split('/').pop();
 
+        console.log(answerId)
         if (!answerId) {
             console.error('No answer ID provided');
             return;

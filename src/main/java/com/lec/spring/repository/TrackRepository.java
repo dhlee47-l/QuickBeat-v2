@@ -9,11 +9,17 @@ public interface TrackRepository {
 
     int saveAll(List<Track> tracks);
 
-    List<Track> findByAnswerId(String answerId);
+    Track findByTrackId(String trackId);
 
-    Track findById(String id);
+    Track findByTrackNo(Integer trackNo);
+
+    List<Track> findByAnswerNo(Integer answerNo);
 
     List<Track> findAll();
 
-    int deleteByAnswerId(String answerId);
+    int deleteByAnswerNo(Integer answerNo);
+
+    int addAnswer(Integer answerNo, Integer trackNo);
+
+    Integer findTrackNoByTrackId(String trackId);  // 추가
 }
