@@ -1,9 +1,7 @@
 SET SESSION FOREIGN_KEY_CHECKS = 0;
 
-/* Drop Tables */
 DROP TABLE IF EXISTS track;
 
-/* Create Tables */
 CREATE TABLE track
 (
     id          VARCHAR(255) PRIMARY KEY,

@@ -28,7 +28,7 @@ public class MainController {
         return "qr";
     }
 
-    @GetMapping("/quiz/{id}")  // 이 부분만 수정
+    @GetMapping("/quiz/{id}")
     public String quiz(@PathVariable String id, Model model) {
         model.addAttribute("answerId", id);
         return "quiz";

@@ -13,6 +13,7 @@ const APIController = (function () {
 
         const clientId = '724a3cf2d2e44418acea58d9eea869af';
         const redirectUri = 'http://localhost:8080/shuffle';
+        // const redirectUri = 'https://deb0-1-234-209-65.ngrok-free.app/shuffle';
         const codeVerifier = localStorage.getItem('code_verifier');
 
         if (!codeVerifier) {

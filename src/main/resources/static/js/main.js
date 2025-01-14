@@ -2,6 +2,7 @@ const MainController = (function() {
     const CONFIG = {
         clientId: '724a3cf2d2e44418acea58d9eea869af',
         redirectUri: 'http://localhost:8080/shuffle',
+        // redirectUri: 'https://deb0-1-234-209-65.ngrok-free.app/shuffle',
         authUrl: 'https://accounts.spotify.com/authorize',
         tokenUrl: 'https://accounts.spotify.com/api/token',
         scope: 'user-read-private user-read-email playlist-read-private user-read-playback-state user-modify-playback-state'
