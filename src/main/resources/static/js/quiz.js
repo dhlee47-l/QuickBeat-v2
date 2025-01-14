@@ -1,4 +1,11 @@
-// 기존 모달 HTML 유지
+let trackData = null;
+let currentTrackIndex = null;
+const $trackListDiv = $('#track-list');
+let answeredQuestions = new Set();
+let totalQuestions = 0;
+let isPlaying = false;
+
+// Modal HTML
 const modalHTML = `
     <div class="modal-overlay" id="track-modal">
         <div class="modal-content">
@@ -45,22 +52,13 @@ const scoreModalHTML = `
     </div>
 `;
 
-let trackData = null;
-let currentTrackIndex = null;
-const $trackListDiv = $('#track-list');
-let answeredQuestions = new Set();
-let totalQuestions = 0;
-let isPlaying = false;
-
-// Initialize
+// Initialize modals
 $('body').append(modalHTML);
 $('body').append(scoreModalHTML);
 
 // Load tracks from Spring Boot API
 async function loadTracks() {
     try {
-        // const urlParams = new URLSearchParams(window.location.search);
-        // const answerId = urlParams.get('id');
         const answerId = window.location.pathname.split('/').pop();
 
         if (!answerId) {
@@ -84,6 +82,7 @@ async function loadTracks() {
     }
 }
 
+// Create track element HTML
 function createTrackElement(track, index) {
     return `
         <div class="track-item" onclick="openModal(${index})">
@@ -101,52 +100,147 @@ function createTrackElement(track, index) {
     `;
 }
 
-// Spotify Playback Control Functions
-async function playTrack(uri) {
+// Device activation function
+async function activateDevice(deviceId, token) {
     try {
-        await fetch('https://api.spotify.com/v1/me/player/play', {
+        const response = await fetch('https://api.spotify.com/v1/me/player', {
             method: 'PUT',
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                device_ids: [deviceId],
+                play: false
+            })
+        });
+
+        if (!response.ok && response.status !== 204) {
+            throw new Error('Failed to activate device');
+        }
+
+        return true;
+    } catch (error) {
+        console.error('Error activating device:', error);
+        return false;
+    }
+}
+
+// Spotify playback functions
+async function playTrack(uri) {
+    try {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            window.location.href = '/';
+            return;
+        }
+
+        const deviceResponse = await fetch('https://api.spotify.com/v1/me/player/devices', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (deviceResponse.status === 401) {
+            alert('401 error');
+            return;
+        }
+
+        const devices = await deviceResponse.json();
+        console.log(devices);
+
+        if (!devices.devices.length) {
+            alert('Please open Spotify on any device first!');
+            return;
+        }
+
+        // Find the first available device and activate it
+        const device = devices.devices[0];
+        if (!device.is_active) {
+            const activated = await activateDevice(device.id, token);
+            if (!activated) {
+                throw new Error('Failed to activate device');
+            }
+            // Wait a short moment for the device to be ready
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+
+        // Try to play
+        const response = await fetch('https://api.spotify.com/v1/me/player/play', {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
                 uris: [uri]
             })
         });
+
+        if (response.status === 404) {
+            alert('Please start playing any track on Spotify first, then try again.');
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error('Failed to play track');
+        }
+
+        isPlaying = true;
+        updatePlayButtonState(true);
     } catch (error) {
         console.error('Error playing track:', error);
+        isPlaying = false;
+        updatePlayButtonState(false);
+
+        if (error.message === 'Failed to play track') {
+            alert('Unable to play track. Please make sure Spotify is active and try again.');
+        }
     }
 }
 
 async function pausePlayback() {
     try {
-        await fetch('https://api.spotify.com/v1/me/player/pause', {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            window.location.href = '/';
+            return;
+        }
+
+        const response = await fetch('https://api.spotify.com/v1/me/player/pause', {
             method: 'PUT',
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                'Authorization': `Bearer ${token}`
             }
         });
+
+        if (response.status !== 404 && !response.ok) {
+            throw new Error('Failed to pause');
+        }
+
+        isPlaying = false;
+        updatePlayButtonState(false);
     } catch (error) {
         console.error('Error pausing playback:', error);
     }
 }
 
-function togglePlay() {
-    const track = trackData[currentTrackIndex];
+function updatePlayButtonState(playing) {
     const $playButton = $('#modal-play-button');
-
-    if (!isPlaying) {
-        playTrack(track.uri);
-        $playButton.html('<i class="fa-solid fa-pause"></i>');
-    } else {
-        pausePlayback();
-        $playButton.html('<i class="fa-solid fa-play"></i>');
-    }
-
-    isPlaying = !isPlaying;
+    $playButton.html(`<i class="fa-solid fa-${playing ? 'pause' : 'play'}"></i>`);
 }
 
+async function togglePlay() {
+    const track = trackData[currentTrackIndex];
+
+    if (!isPlaying) {
+        await playTrack(track.uri);
+    } else {
+        await pausePlayback();
+    }
+}
+
+// Modal functions
 function openModal(index) {
     const track = trackData[index];
     currentTrackIndex = index;
@@ -159,11 +253,10 @@ function openModal(index) {
     $('.question-mark-overlay').removeClass('hidden');
     $('.modal-track-info').removeClass('visible');
 
-    $('#modal-play-button')
-        .html('<i class="fa-solid fa-play"></i>')
-        .off('click')
-        .on('click', togglePlay);
+    updatePlayButtonState(false);
+    isPlaying = false;
 
+    $('#modal-play-button').off('click').on('click', togglePlay);
     $('#modal-o-button').off('click').on('click', () => handleO(index));
     $('#modal-x-button').off('click').on('click', () => handleX(index));
 }
@@ -172,20 +265,23 @@ function closeModal() {
     $('#track-modal').removeClass('active');
     if (isPlaying) {
         pausePlayback();
-        isPlaying = false;
     }
 }
 
+// Quiz handling functions
 function handleO(index) {
+    $('.question-mark-overlay').addClass('hidden');
+    $('.modal-track-info').addClass('visible');
+
     const $trackCover = $(`#track-cover-${index}`);
     if ($trackCover.is(':visible')) {
         answeredQuestions.add(index);
     }
     $trackCover.hide();
 
-    $('.question-mark-overlay').addClass('hidden');
-    $('.modal-track-info').addClass('visible');
-    closeModal();
+    setTimeout(() => {
+        closeModal();
+    }, 100);
 }
 
 function handleX(index) {
@@ -202,6 +298,7 @@ function handleX(index) {
     closeModal();
 }
 
+// Score handling functions
 function startConfetti() {
     confetti({
         particleCount: 100,
@@ -243,7 +340,31 @@ $('#track-modal').on('click', function(e) {
     }
 });
 
-// Initialize on page load
-$(document).ready(() => {
+// Initialize
+$(document).ready(async () => {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
+
+    // Verify token is valid
+    try {
+        const response = await fetch('https://api.spotify.com/v1/me', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            window.location.href = '/';
+            return;
+        }
+    } catch (error) {
+        console.error('Error verifying token:', error);
+        window.location.href = '/';
+        return;
+    }
+
     loadTracks();
 });

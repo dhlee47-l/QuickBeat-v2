@@ -4,7 +4,7 @@ const MainController = (function() {
         redirectUri: 'http://localhost:8080/shuffle',
         authUrl: 'https://accounts.spotify.com/authorize',
         tokenUrl: 'https://accounts.spotify.com/api/token',
-        scope: 'user-read-private user-read-email playlist-read-private user-modify-playback-state'
+        scope: 'user-read-private user-read-email playlist-read-private user-read-playback-state user-modify-playback-state'
     };
 
     const generateCodeVerifier = (length = 128) => {
@@ -72,7 +72,6 @@ const MainController = (function() {
 
         const response = await fetch(CONFIG.tokenUrl, payload);
         const data = await response.json();
-        console.log("데이터"+data)
 
         localStorage.setItem('access_token', data.access_token);
 
