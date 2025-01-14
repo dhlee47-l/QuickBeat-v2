@@ -1,17 +1,52 @@
 const APIController = (function () {
+    // Authorization 코드로 토큰 교환
     const _getToken = async () => {
-        const result = await fetch('https://accounts.spotify.com/api/token', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'Authorization': 'Basic ' + btoa('724a3cf2d2e44418acea58d9eea869af' + ':' + 'b330b0a626024564b802102b8f4b23f5')
-            },
-            body: 'grant_type=client_credentials'
-        });
+        // URL에서 인증 코드 가져오기
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
 
-        const data = await result.json();
-        return data.access_token;
-    }
+        if (!code) {
+            // 인증 코드가 없으면 메인 페이지로 리다이렉트
+            window.location.href = '/';
+            return;
+        }
+
+        const clientId = '724a3cf2d2e44418acea58d9eea869af';
+        const redirectUri = 'http://localhost:8080/shuffle';
+        const codeVerifier = localStorage.getItem('code_verifier');
+
+        if (!codeVerifier) {
+            // code verifier가 없으면 메인 페이지로 리다이렉트
+            window.location.href = '/';
+            return;
+        }
+
+        try {
+            const result = await fetch('https://accounts.spotify.com/api/token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    client_id: clientId,
+                    grant_type: 'authorization_code',
+                    code: code,
+                    redirect_uri: redirectUri,
+                    code_verifier: codeVerifier,
+                }),
+            });
+
+            const data = await result.json();
+
+            // 토큰을 저장하고 URL에서 코드 제거
+            localStorage.setItem('access_token', data.access_token);
+            window.history.pushState({}, null, '/shuffle');
+
+            return data.access_token;
+        } catch (error) {
+            console.error('Error getting token:', error);
+            // 에러 발생시 메인 페이지로 리다이렉트
+            window.location.href = '/';
+        }
+    };
 
     const _getGenres = async (token) => {
         const result = await fetch(`https://api.spotify.com/v1/browse/categories?locale=ko_KR`, {
@@ -107,7 +142,6 @@ const APIController = (function () {
         },
     }
 })();
-
 
 const FormValidator = (function () {
     // Validation rules
@@ -299,7 +333,6 @@ const UIController = (function () {
     };
 })();
 
-
 const APPController = (function (UICtrl, APICtrl, FormValidator) {
     const DOMInputs = UICtrl.inputField();
     const DOMElements = UICtrl.getDOMElements();
@@ -412,12 +445,28 @@ const APPController = (function (UICtrl, APICtrl, FormValidator) {
 
 
 
-            localStorage.setItem('trackData', JSON.stringify(trackData));
-            console.log(trackData)
-            window.location.href = 'qr.html';
+
+            // Instead of localStorage, send to Spring Boot API
+            const response = await fetch('/api/tracks', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(trackData)
+
+            });
+
+
+            if (!response.ok) {
+                throw new Error('Failed to save tracks');
+            }
+
+            const qrCodeId = await response.text();
+            window.location.href = `/qr?id=${qrCodeId}`;
+
         } catch (error) {
-            console.error('Error fetching tracks:', error);
-            UICtrl.showError('Error loading tracks. Please try again.');
+            console.error('Error:', error);
+            UICtrl.showError('Error saving tracks. Please try again.');
         }
     });
 
