@@ -13,6 +13,7 @@ const APIController = (function () {
 
         const clientId = '724a3cf2d2e44418acea58d9eea869af';
         const redirectUri = 'http://localhost:8080/shuffle';
+        // const redirectUri = 'ngrok temporary domain';
         const codeVerifier = localStorage.getItem('code_verifier');
 
         if (!codeVerifier) {
