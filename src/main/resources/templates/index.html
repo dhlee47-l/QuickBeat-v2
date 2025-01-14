@@ -9,7 +9,7 @@
 </head>
 <body>
 
-<!--<th:block th:insert="~{/navbar::navbar}"></th:block>-->
+<th:block th:insert="~{common/navbar::navbar}"></th:block>
 
 <header class="hero">
     <div class="hero-content">
@@ -54,7 +54,9 @@
     </div>
 </section>
 
-<!--<th:block th:insert="~{/footer :: footer}"></th:block>-->
+<th:block th:insert="~{common/footer :: footer}"></th:block>
+<script th:src="@{/JS/common/navbar.js}"></script>
+<script th:src="@{/JS/common/footer.js}"></script>
 <script th:src="@{/js/main.js}"></script>
 </body>
 </html>

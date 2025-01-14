@@ -6,17 +6,18 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
   <link rel="stylesheet" type="text/css" th:href="@{/css/main.css}">
 </head>
+<th:block th:fragment="navbar">
 <nav class="navbar">
   <div class="nav-content">
     <div class="nav-logo">
-      <a th:href="@{/index}">
+      <a th:href="@{/}">
         <i class="fa-brands fa-spotify"></i>
         <i class="fa-solid fa-gamepad"></i>
         Quick Beat
       </a>
     </div>
     <div class="nav-links">
-      <a th:href="@{/index}">Home</a>
+      <a th:href="@{/}">Home</a>
       <a href="https://developer.spotify.com/documentation/web-api">Documentation</a>
       <a href="https://open.spotify.com/">Songs</a>
       <a th:href="@{/shuffle}">Game</a>
@@ -26,3 +27,4 @@
     </div>
   </div>
 </nav>
+</th:block>
