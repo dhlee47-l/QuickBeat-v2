@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quick Beat QR Code</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" type="text/css" href="/css/qr.css">
+    <link rel="stylesheet" type="text/css" th:href="@{/css/qr.css}">
+    <link rel="stylesheet" type="text/css" th:href="@{/css/main.css}">
 </head>
 <body>
-<div id="navbar-container"></div>
-<script src="/js/navbar.js"></script>
+<th:block th:insert="~{common/navbar::navbar}"></th:block>
 
 <div class="qr-container">
     <h2>Quiz Answer Preview</h2>
@@ -21,10 +21,6 @@
     <button class="skip-button" onclick="goToQuiz()" th:data-answer-id="${answerId}">Next</button>
 </div>
 
-<!--<div id="answer-sheet" class="answer-sheet">-->
-<!--    <div class="track-grid" id="track-list"></div>-->
-<!--</div>-->
-
 <div id="answer-sheet" class="answer-sheet">
     <div th:if="${answerId != null}">
         <input type="hidden" id="answerId" th:value="${answerId}">
@@ -32,8 +28,9 @@
     <div class="track-grid" id="track-list"></div>
 </div>
 
-<div id="footer-container"></div>
-<script src="/js/footer.js"></script>
+<th:block th:insert="~{common/footer :: footer}"></th:block>
+<script th:src="@{/JS/common/navbar.js}"></script>
+<script th:src="@{/JS/common/footer.js}"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="/js/qr.js"></script>
 </body>

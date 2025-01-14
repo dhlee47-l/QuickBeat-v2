@@ -1,10 +1,10 @@
 document.addEventListener("DOMContentLoaded", function () {
-    const isQuizPage = window.location.pathname.includes('quiz.html');
+    const isQuizPage = window.location.pathname.includes('quiz');
 
     if (isQuizPage) {
         initNavbar();
     } else {
-        fetch("/navbar.html")
+        fetch("/navbar")
             .then(response => response.text())
             .then(data => {
                 document.getElementById("navbar-container").innerHTML = data;
