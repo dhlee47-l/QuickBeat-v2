@@ -445,6 +445,7 @@ const APPController = (function (UICtrl, APICtrl, FormValidator) {
 
 
 
+
             // Instead of localStorage, send to Spring Boot API
             const response = await fetch('/api/tracks', {
                 method: 'POST',

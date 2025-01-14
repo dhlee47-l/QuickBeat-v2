@@ -51,6 +51,7 @@ async function showAnswerSheet(answerId) {
             throw new Error('Failed to fetch tracks data');
         }
         const tracks = await response.json();
+        console.log(tracks)
 
         // qr-container 숨기기
         const qrContainer = document.querySelector('.qr-container');
@@ -70,7 +71,7 @@ async function showAnswerSheet(answerId) {
             trackList.innerHTML = tracks.map(track => `
                 <div class="track-item">
                     <div class="artwork-container">
-                        <img src="${track.albumImage}" alt="${track.name}">
+                        <img src=${track.albumImage} alt="${track.name}">
                     </div>
                     <div class="track-info">
                         <div class="track-name">${track.name}</div>
