@@ -1,10 +1,8 @@
 # 서버포트 번호
 server:
   port: 8080
-
   tomcat:
     max-http-form-post-size: 10GB
-
 
 spring:
   application:
@@ -20,14 +18,35 @@ spring:
     username: root
     password: 12345678
 
-  # security
   security:
-    user:
-      name: user
-      password: 12345678
+    oauth2:
+      client:
+        registration:
+          spotify:
+            client-id: 724a3cf2d2e44418acea58d9eea869af
+            client-secret: ${SPOTIFY_CLIENT_SECRET}
+            redirect-uri: http://localhost:8080/shuffle
+            authorization-grant-type: authorization_code
+            scope:
+              - user-read-private
+              - user-read-email
+              - playlist-read-private
+              - user-read-playback-state
+              - user-modify-playback-state
 
+        provider:
+          spotify:
+            authorization-uri: https://accounts.spotify.com/authorize
+            token-uri: https://accounts.spotify.com/api/token
+            user-info-uri: https://api.spotify.com/v1/me
+            user-name-attribute: id
 
-# MyBatis 매퍼(mapper) 파일 위치 설정
-# src/main/resources 이하의 경로 지정
+# MyBatis 매퍼 파일 위치 설정
 mybatis:
   mapper-locations: classpath:mapper/**/*.xml
+
+# 로깅 설정 (개발 시에만 사용)
+logging:
+  level:
+    org.springframework.security: TRACE
+    org.springframework.web: DEBUG

@@ -1,55 +1,18 @@
 const APIController = (function () {
     // Authorization 코드로 토큰 교환
-    const _getToken = async () => {
-        // URL에서 인증 코드 가져오기
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-
-        if (!code) {
-            // 인증 코드가 없으면 메인 페이지로 리다이렉트
-            window.location.href = '/';
-            return;
+    const getStoredToken = () => {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            window.location.href = '/';  // 토큰 없으면 메인으로
+            return null;
         }
-
-        const clientId = '724a3cf2d2e44418acea58d9eea869af';
-        const redirectUri = 'http://localhost:8080/shuffle';
-        // const redirectUri = 'ngrok temporary domain';
-        const codeVerifier = localStorage.getItem('code_verifier');
-
-        if (!codeVerifier) {
-            // code verifier가 없으면 메인 페이지로 리다이렉트
-            window.location.href = '/';
-            return;
-        }
-
-        try {
-            const result = await fetch('https://accounts.spotify.com/api/token', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({
-                    client_id: clientId,
-                    grant_type: 'authorization_code',
-                    code: code,
-                    redirect_uri: redirectUri,
-                    code_verifier: codeVerifier,
-                }),
-            });
-
-            const data = await result.json();
-
-            // 토큰을 저장하고 URL에서 코드 제거
-            localStorage.setItem('access_token', data.access_token);
-            window.history.pushState({}, null, '/shuffle');
-
-            return data.access_token;
-        } catch (error) {
-            console.error('Error getting token:', error);
-            // 에러 발생시 메인 페이지로 리다이렉트
-            window.location.href = '/';
-        }
+        return token;
     };
 
-    const _getGenres = async (token) => {
+    const _getGenres = async () => {
+        const token = getStoredToken();
+        if (!token) return;
+
         const result = await fetch(`https://api.spotify.com/v1/browse/categories?locale=ko_KR`, {
             method: 'GET',
             headers: {'Authorization': 'Bearer ' + token}
@@ -59,8 +22,11 @@ const APIController = (function () {
         return data.categories.items;
     }
 
-    const _getPlaylistByGenre = async (token, genreName) => {
-        const limit = 50; // 더 많은 데이터를 가져옴
+    const _getPlaylistByGenre = async (genreName) => {
+        const token = getStoredToken();
+        if (!token) return;
+
+        const limit = 50;
         try {
             const queryParam = encodeURIComponent(`${genreName} popular`);
             const result = await fetch(`https://api.spotify.com/v1/search?q=${queryParam}&type=playlist&limit=${limit}&market=KR`, {
@@ -74,9 +40,6 @@ const APIController = (function () {
 
             const data = await result.json();
             const playlists = data.playlists?.items || [];
-
-
-            console.log('Found Spotify playlists:', playlists.length);
             return playlists.slice(0, 50);
         } catch (error) {
             console.error('Error in getPlaylistByGenre:', error);
@@ -85,10 +48,12 @@ const APIController = (function () {
     };
 
 
-    const _getTracks = async (token, tracksEndPoint) => {
+    const _getTracks = async (tracksEndPoint) => {
+        const token = getStoredToken();
+        if (!token) return;
+
         const limit = 20;
         try {
-            // tracksEndPoint에서 playlist ID 추출
             const playlistId = tracksEndPoint.split('/').find(segment =>
                 segment.match(/^[0-9A-Za-z]{22}$/));
 
@@ -97,10 +62,7 @@ const APIController = (function () {
                 throw new Error('Invalid playlist ID');
             }
 
-
             const apiUrl = `https://api.spotify.com/v1/playlists/${playlistId}/tracks?limit=${limit}&market=KR`;
-            console.log('Requesting tracks from:', apiUrl);
-
             const result = await fetch(apiUrl, {
                 method: 'GET',
                 headers: {
@@ -108,15 +70,11 @@ const APIController = (function () {
                     'Content-Type': 'application/json'
                 }
             });
-
             if (!result.ok) {
-                console.log('API Response Status:', result.status);
                 throw new Error(`Failed to fetch tracks: ${result.status}`);
             }
 
             const data = await result.json();
-            console.log('Tracks data received:', data);
-
             if (!data.items || !Array.isArray(data.items)) {
                 throw new Error('Invalid response structure');
             }
@@ -129,17 +87,14 @@ const APIController = (function () {
     };
 
     return {
-        getToken() {
-            return _getToken();
+        getGenres() {
+            return _getGenres();
         },
-        getGenres(token) {
-            return _getGenres(token);
+        getPlaylistByGenre(genreName) {
+            return _getPlaylistByGenre(genreName);
         },
-        getPlaylistByGenre(token, genreName) {
-            return _getPlaylistByGenre(token, genreName);
-        },
-        getTracks(token, tracksEndPoint) {
-            return _getTracks(token, tracksEndPoint);
+        getTracks(tracksEndPoint) {
+            return _getTracks(tracksEndPoint);
         },
     }
 })();
@@ -340,9 +295,7 @@ const APPController = (function (UICtrl, APICtrl, FormValidator) {
 
     const loadGenres = async () => {
         try {
-            const token = await APICtrl.getToken();
-            UICtrl.storeToken(token);
-            const genres = await APICtrl.getGenres(token);
+            const genres = await APICtrl.getGenres();  // token 파라미터 제거
             genres.forEach(element => UICtrl.createGenre(element.name, element.name));
         } catch (error) {
             console.error('Error loading genres:', error);
@@ -370,9 +323,8 @@ const APPController = (function (UICtrl, APICtrl, FormValidator) {
         }
 
         try {
-            const token = UICtrl.getStoredToken().token;
             const genreName = DOMInputs.genre.options[DOMInputs.genre.selectedIndex].value;
-            const playlists = await APICtrl.getPlaylistByGenre(token, genreName);
+            const playlists = await APICtrl.getPlaylistByGenre(genreName);  // token 파라미터 제거
 
             if (!playlists || playlists.length === 0) {
                 UICtrl.showComingSoon();
@@ -419,11 +371,10 @@ const APPController = (function (UICtrl, APICtrl, FormValidator) {
         }
 
         try {
-            const token = UICtrl.getStoredToken().token;
             const selectedPlaylist = DOMInputs.playlist;
             const tracksEndPoint = selectedPlaylist.options[selectedPlaylist.selectedIndex].value;
 
-            const tracks = await APICtrl.getTracks(token, tracksEndPoint);
+            const tracks = await APICtrl.getTracks(tracksEndPoint);  // token 파라미터 제거
 
             if (!tracks || tracks.length === 0) {
                 UICtrl.showError('No tracks found in this playlist');
@@ -443,7 +394,6 @@ const APPController = (function (UICtrl, APICtrl, FormValidator) {
                 };
             });
 
-
             // send to Spring Boot API
             const response = await fetch('/api/tracks', {
                 method: 'POST',
@@ -451,20 +401,14 @@ const APPController = (function (UICtrl, APICtrl, FormValidator) {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(trackData)
-
             });
-
 
             if (!response.ok) {
                 throw new Error('Failed to save tracks');
-                console.error('Server error:', errorData);
-                throw new Error(`Failed to save tracks: ${response.status}`);
             }
 
             const qrCodeId = await response.text();
             window.location.href = `/qr?id=${qrCodeId}`;
-            // const answerId = await response.text();
-            // window.location.href = `/qr?id=${answerId}`;
 
         } catch (error) {
             console.error('Error:', error);
@@ -484,4 +428,3 @@ const APPController = (function (UICtrl, APICtrl, FormValidator) {
 })(UIController, APIController, FormValidator);
 
 APPController.init();
-
